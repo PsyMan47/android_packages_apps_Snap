@@ -194,15 +194,11 @@ public class CameraActivity extends Activity
     private static boolean PIE_MENU_ENABLED = false;
     private boolean mDeveloperMenuEnabled = false;
 
-    private boolean mCamera2supported = false;
-    private boolean mCamera2enabled = false;
-
     /** This data adapter is used by FilmStripView. */
     private LocalDataAdapter mDataAdapter;
     /** This data adapter represents the real local camera data. */
     private LocalDataAdapter mWrappedDataAdapter;
 
-    private Context mContext;
     private PanoramaStitchingManager mPanoramaManager;
     private PlaceholderManager mPlaceholderManager;
     private int mCurrentModuleIndex;
@@ -1489,9 +1485,6 @@ public class CameraActivity extends Activity
     @Override
     public void onCreate(Bundle state) {
         super.onCreate(state);
-
-        mContext = getApplicationContext();
-
         // Check if this is in the secure camera mode.
         Intent intent = getIntent();
         String action = intent.getAction();
@@ -1569,14 +1562,8 @@ public class CameraActivity extends Activity
             }
         }
 
-        // Check if the device supports Camera API 2
-        mCamera2supported = CameraUtil.isCamera2Supported(mContext);
-        Log.d(TAG, "Camera API 2 supported: " + mCamera2supported);
-
-        mCamera2enabled = mCamera2supported && mContext.getResources().getBoolean(R.bool.support_camera_api_v2);
-        Log.d(TAG, "Camera API 2 enabled: " + mCamera2enabled);
-
-        if (mCamera2enabled && (moduleIndex == ModuleSwitcher.PHOTO_MODULE_INDEX ||
+        boolean cam2on = PersistUtil.getCamera2Mode();
+        if (cam2on && (moduleIndex == ModuleSwitcher.PHOTO_MODULE_INDEX ||
                 moduleIndex == ModuleSwitcher.VIDEO_MODULE_INDEX))
             moduleIndex = ModuleSwitcher.CAPTURE_MODULE_INDEX;
 
@@ -2143,14 +2130,9 @@ public class CameraActivity extends Activity
 
     @Override
     public void onModuleSelected(int moduleIndex) {
-        if (moduleIndex == ModuleSwitcher.QR_MODULE_INDEX) {
-            startActivity(new Intent(this, ScannerActivity.class));
-            finish();
-            return;
-        }
-
+        boolean cam2on = PersistUtil.getCamera2Mode();
         mForceReleaseCamera = moduleIndex == ModuleSwitcher.CAPTURE_MODULE_INDEX ||
-                (mCamera2enabled && moduleIndex == ModuleSwitcher.PHOTO_MODULE_INDEX);
+                (cam2on && moduleIndex == ModuleSwitcher.PHOTO_MODULE_INDEX);
         if (mForceReleaseCamera) {
             moduleIndex = ModuleSwitcher.CAPTURE_MODULE_INDEX;
         }
